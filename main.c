@@ -14,7 +14,7 @@ int main( int argc, char * argv[] )
         const char answ[] = "zeeslag";
         char ask[] ="<zeeslag>";
         int size = 0;
-        char *total="";
+        char *total;
 
         char buf [500];
         zmq_msg_t msg;
@@ -26,7 +26,7 @@ int main( int argc, char * argv[] )
 
         //-----clear all buffers
         memset(&username,'\0',sizeof(username));
-        memset(&total,'\0',sizeof(total));
+        //memset(&total,'\0',sizeof(total));
         //----player username
         printf("Username:");
         gets(username);
@@ -34,14 +34,15 @@ int main( int argc, char * argv[] )
 
         //------memory optimization total buffer
         size= strlen(username)+sizeof(ask);
-        total = realloc(total,size);
-//blijft hangen
-        memset(&total,'\0',sizeof(total));
+        total = realloc(&total,size);
+        total = malloc(size);
+
+        memset(&total,'\0',strlen(total));
         strcat(total,ask);
-        printf("%s",total);
+        //printf("%s",total);
         strcat(total,username);
         printf("%s\n",total);
-        printf("sizeof total %llu strln totel %llu",sizeof(total),strlen(total));
+        printf("sizeof total %llu strln totel %llu\n",sizeof(total),strlen(total));
 
 
         for(int i=0; i < 5; i++)
@@ -52,7 +53,7 @@ int main( int argc, char * argv[] )
 
             //rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, answ, strlen (answ));
 
-            rp = zmq_send(publisher, ask, sizeof(ask), 0);
+            rp = zmq_send(publisher, total, strlen(total), 0);
             //printf("ask send\n");
             assert (rp != -1 );//check send
             printf("searching for players");
@@ -82,6 +83,7 @@ int main( int argc, char * argv[] )
         zmq_close(subscriber);
         zmq_close(publisher);
         free(total);
+
         zmq_ctx_shutdown( context ); //optional for cleaning lady order (get ready you l*zy f*ck)
         zmq_ctx_term( context ); //cleaning lady goes to work
         return 0;
