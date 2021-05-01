@@ -3,8 +3,9 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-LIBS += -LA:/NP/zeeslag/Zeeslag/lib -lzmq -lws2_32 -lIphlpapi
-INCLUDEPATH += A:/NP/zeeslag/Zeeslag/include
+DEFINES += ZMQ_STATIC
+LIBS += -L A:\NP\zeeslag\lib -lzmq -lws2_32 -lIphlpapi
+INCLUDEPATH += A:/NP/zeeslag/include
 
 SOURCES += \
         main.cpp \
@@ -12,5 +13,4 @@ SOURCES += \
 
 HEADERS += \
     ships.h \
-    zmq.hpp \
-    zmq_addon.hpp
+
