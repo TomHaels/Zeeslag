@@ -9,7 +9,7 @@
 int main( int argc, char * argv[] )
 {
         void *context = zmq_ctx_new();
-        void *publisher = zmq_socket(context, ZMQ_PUSH);
+        void *publisher = zmq_socket(context, ZMQ_PUB);
         void *subscriber = zmq_socket (context, ZMQ_SUB);
         const char answ[] = "zeeslag";
         char ask[] ="<zeeslag>";
