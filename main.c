@@ -4,18 +4,30 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
+#include <time.h>
 
+void delay(int number_of_seconds)
+{
+    // Converting time into milli_seconds
+    int milli_seconds = 1000 * number_of_seconds;
+
+    // Storing start time
+    clock_t start_time = clock();
+
+    // looping till required time is not achieved
+    while (clock() < start_time + milli_seconds);
+}
 
 int main( int argc, char * argv[] )
 {
         void *context = zmq_ctx_new();
-        void *publisher = zmq_socket(context, ZMQ_PUB);
+        void *publisher = zmq_socket(context, ZMQ_PUSH);
         void *subscriber = zmq_socket (context, ZMQ_SUB);
-        const char answ[] = "zeeslag";
+        const char answ[] = "<zeeslag>";
         char ask[] ="<zeeslag>";
         int size = 0;
         char *total;
-
+        int delaytime =10; //delay in sec
         char buf [500];
         zmq_msg_t msg;
         char username[100];
@@ -44,40 +56,48 @@ int main( int argc, char * argv[] )
         printf("%s\n",total);
         printf("sizeof total %llu strln totel %llu\n",sizeof(total),strlen(total));
 
-
-        for(int i=0; i < 5; i++)
-        {
+        int flag =1;
             rc = zmq_msg_init (&msg);
             assert (rc == 0);
 
 
-            //rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, answ, strlen (answ));
 
+            rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, answ, strlen (answ));
             rp = zmq_send(publisher, total, strlen(total), 0);
+
             //printf("ask send\n");
             assert (rp != -1 );//check send
             printf("searching for players");
-            int flag =1;
+            int counter =0;
+
             while(flag == 1)
             {
                 rc = zmq_recv (subscriber, buf, sizeof(buf), 0);
                 assert(rc != -1);//check status recv
 
                 printf(".");
-                sleep(1);
+                delay(1);
+                //printf("%d",flag);
+                counter = counter +1;
+
+                if (counter>delaytime)
+                {
+                    flag = 0;
+                    printf("\nno players found");
+                }
 
                 if(buf > 0)
                 {
-                printf("\n play\n");//received messages
-                flag = 0;
-                memset(&buf,'\0',sizeof(buf));
+                      printf("%s",buf);
+                    flag = 0;
+                    memset(&buf,'\0',sizeof(buf));
                 }
 
 
             }
                 printf("\n");
-            zmq_msg_close (&msg);
-        }
+        zmq_msg_close (&msg);
+
 
         //free (string);
         zmq_close(subscriber);
