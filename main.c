@@ -25,20 +25,23 @@ int main( int argc, char * argv[] )
         void *subscriber = zmq_socket (context, ZMQ_SUB);
         const char answ[] = "<zeeslag>";
         char ask[] ="<zeeslag>";
+
         int size = 0;
         char *total;
         int delaytime =10; //delay in sec
-        char buf [500];
+        char buf[30];
         zmq_msg_t msg;
         char username[100];
 
         //connect
-        int rc = zmq_connect( subscriber, "tcp://benternet.pxl-ea-ict.be:24042" );
+        int rc = zmq_connect(subscriber, "tcp://benternet.pxl-ea-ict.be:24042" );
         int rp = zmq_connect(publisher, "tcp://benternet.pxl-ea-ict.be:24041");
 
         //-----clear all buffers
         memset(&username,'\0',sizeof(username));
+        memset(&buf,'\0',sizeof(buf));
         //memset(&total,'\0',sizeof(total));
+
         //----player username
         printf("Username:");
         gets(username);
@@ -60,24 +63,27 @@ int main( int argc, char * argv[] )
             rc = zmq_msg_init (&msg);
             assert (rc == 0);
 
+            rp = zmq_send(publisher, total, strlen(total), 0);// send <zeeslag>username
+            rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, answ, strlen (answ)); //subsricbe on <zeeslag>
 
-
-            rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, answ, strlen (answ));
-            rp = zmq_send(publisher, total, strlen(total), 0);
-
-            //printf("ask send\n");
             assert (rp != -1 );//check send
+
             printf("searching for players");
             int counter =0;
 
             while(flag == 1)
             {
+                int timeout = 5000; // time for recv
+                zmq_setsockopt (subscriber, ZMQ_RCVTIMEO, &timeout, sizeof (int)); // sockopt for timeout recv
+
                 rc = zmq_recv (subscriber, buf, sizeof(buf), 0);
                 assert(rc != -1);//check status recv
 
+                //rp = zmq_send(publisher, buf, strlen(buf),0);
+
                 printf(".");
                 delay(1);
-                //printf("%d",flag);
+                //printf("%d",rc);
                 counter = counter +1;
 
                 if (counter>delaytime)
@@ -88,9 +94,10 @@ int main( int argc, char * argv[] )
 
                 if(buf > 0)
                 {
-                      printf("%s",buf);
+                    printf("\n player found %s strlen %llu sizeof %llu",buf,strlen(buf),sizeof(buf));
                     flag = 0;
                     memset(&buf,'\0',sizeof(buf));
+                    rc = zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, buf, strlen(buf));
                 }
 
 
