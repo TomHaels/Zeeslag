@@ -29,7 +29,7 @@ int main( int argc, char * argv[] )
             gets(tekst);
             printf("\n");
             rp = zmq_send(publisher, tekst, strlen(tekst), 0);// send <zeeslag>username
-            printf("%s %d\n",tekst,&tekst);
+
 
             assert (rp != -1 );//check send
             memset(&tekst,'\0',strlen(tekst));

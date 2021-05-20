@@ -9,30 +9,32 @@ using namespace std;
 int main()
 {
 
-
-    zmq::context_t context;
-    zmq::socket_t publisher(context,zmq::socket_type::push);
-    zmq::socket_t subscriber(context,zmq::socket_type::sub);
-
+    zmq::context_t context(1);
+    zmq::socket_t publisher(context,ZMQ_PUSH);
+    zmq::socket_t subscriber(context,ZMQ_SUB);
+    string rcvbuf;
     int flag=0;
     zmq::message_t msg;
 
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
-    const string total ="hello";
+    const string total ="hallo";
+    const string zeeslag ="zeelsag";
     string buf;
 
     // set up some static data to send
     //const std::string data{"Hello"};
-
-
+        subscriber.set(zmq::sockopt::subscribe,"zeeslag");
 
         publisher.send(zmq::buffer(total),zmq::send_flags::none);
         cout <<"ask send"<<endl;
         std::cout << "searching for players"<< std::endl;
         flag =1;
+        auto rc= subscriber.recv(msg,zmq::recv_flags::none);
+        rcvbuf=(char *)(msg.data());
 
 
+        cout<<"message received "<< rcvbuf<<"\n";
 
         subscriber.close();
         publisher.close();
