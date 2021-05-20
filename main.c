@@ -24,6 +24,7 @@ int main( int argc, char * argv[] )
         void *publisher = zmq_socket(context, ZMQ_PUSH);
         void *subscriber = zmq_socket (context, ZMQ_SUB);
         const char answ[] = "<zeeslag>";
+        char usern[]="<zeeslag><username>";
         char ask[] ="<zeeslag>";
 
         int size = 0;
@@ -36,8 +37,10 @@ int main( int argc, char * argv[] )
         //connect
         int rc = zmq_connect(subscriber, "tcp://benternet.pxl-ea-ict.be:24042" );
         int rp = zmq_connect(publisher, "tcp://benternet.pxl-ea-ict.be:24041");
-
+        //int rc = zmq_connect(subscriber, "tcp://benternet.backup.pxl-ea-ict.be:24042" );
+        //int rp = zmq_connect(publisher, "tcp://benternet.backup.pxl-ea-ict.be:24041");
         //-----clear all buffers
+
         memset(&username,'\0',sizeof(username));
         memset(&buf,'\0',sizeof(buf));
         //memset(&total,'\0',sizeof(total));
@@ -100,6 +103,20 @@ int main( int argc, char * argv[] )
                     rc = zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, buf, strlen(buf));
                 }
 
+//                string name;
+//                vector <string> players(0);
+//                while(1)
+//                {
+//                    std:: cin >> name;
+
+//                    players.push_back(name);
+//                    //print players list + location.
+//                    for(int a =0;a<int(players.size());a++)
+//                    {
+//                        cout << int(players.size())-(int(players.size())-a)+1 <<"\t"<< string(players.at(a))<<"\t"<<"sizeof:"<< string(players.at(a)).size()<<"\t"<<"length:"<< string(players.at(a)).length()<<"\n";
+//                    }
+
+//                }
 
             }
                 printf("\n");
