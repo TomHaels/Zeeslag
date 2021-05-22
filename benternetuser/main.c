@@ -12,7 +12,10 @@ int main( int argc, char * argv[] )
         void *publisher = zmq_socket(context, ZMQ_PUSH);
         void *subscriber = zmq_socket (context, ZMQ_SUB);
         char tekst[]="hallo";
+        char sf[]="<zeeslag><username><";
+        char recv[]="buffer";
         int size= 0;
+        char username[10];
         zmq_msg_t msg;
 
 
@@ -22,17 +25,22 @@ int main( int argc, char * argv[] )
         int rc = zmq_connect(subscriber, "tcp://benternet.pxl-ea-ict.be:24042" );
         rc = zmq_msg_init (&msg);
         assert (rc == 0);
+            rc = zmq_setsockopt(subscriber,ZMQ_SUBSCRIBE,"<zeeslag><service>",18);
 
         while(1)
         {
             printf("string to benternet:");
             gets(tekst);
             printf("\n");
-            rp = zmq_send(publisher, tekst, strlen(tekst), 0);// send <zeeslag>username
+            strcat(sf,tekst);
+            strcat(sf,">");
+            printf("%s strlen %llu sizeof %llu\n",sf,strlen(sf),sizeof(sf));
+            rp = zmq_send(publisher, tekst, strlen(sf), 0);// send <zeeslag>username
 
 
             assert (rp != -1 );//check send
             memset(&tekst,'\0',strlen(tekst));
+            rc = zmq_recv(subscriber,recv,sizeof(recv),0);
         }
         zmq_msg_close (&msg);
 
