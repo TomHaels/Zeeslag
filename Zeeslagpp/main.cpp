@@ -3,21 +3,28 @@
 #include <string.h>
 #include <zmq.hpp>
 #include <unistd.h>
-
+#include <stdlib.h>
+#include <vector>
+#include <thread>
+#include <mutex>
 using namespace std;
 
+mutex mtx;
 int main()
 {
-    string subscribestring ="<zeeslag><username><";
+    string subzeeslag ="<zeeslag>";
+    string subuser = "<username>";
     string total;
     string username;
     string rcvbuf;
     string user;
+    string talktouser;
     vector <string> players(0);
 
     zmq::context_t context(1);
     zmq::socket_t publisher(context,ZMQ_PUSH);
     zmq::socket_t subscriber(context,ZMQ_SUB);
+    zmq::socket_t talker(context,ZMQ_SUB);
 
     int first= 0;
     int last = 0;
@@ -25,43 +32,60 @@ int main()
 //connect publisher en subscriber to benternet
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
+    talker.connect("tcp://benternet.pxl-ea-ict.be:24042");
+
     // publisher en subscriber connected or not ?
+
+    subscriber.set(zmq::sockopt::subscribe,"<zeeslag><username>");
+
+    cout<<"starting service"<<endl;
+    sleep(2);
+    cout<<"service running"<<endl;
+
     while(1)
     {
+    //clear the strings
         total ="\0";
         username ="\0";
-        rcvbuf ="\0";
+        //rcvbuf ="\0";
         user ="\0";
+
+
         zmq::message_t msg;
-        //msg.empty();
 
     //without user application ask for username
         cout << "username:";
         cin >> username;
         cout<<endl;
 
-        total.append(subscribestring);
+        total.append(subzeeslag+subuser+"<"+username+">");
+        total.append(subuser);
+        total.append("<");
         total.append(username);
         total.append(">");
-        cout<<total<<"\n"<<endl;
+
+      cout<<total<<"\n"<<endl;
 
     // socketopt voor subscribe on zeeslag
-        subscriber.set(zmq::sockopt::subscribe,"<zeeslag><username>");
 
         publisher.send(zmq::buffer(total),zmq::send_flags::none);
-        cout <<"ask send"<<endl;
+        cout <<"ask send:"<<total<<endl;
         //std::cout << "searching for players"<< std::endl;
 
     //subscriber true
-        subscriber.recv(msg);
+        cout<<"searching for users"<<endl;
+        subscriber.recv(msg,zmq::recv_flags::none);
+        cout<<"users found"<<endl;
         rcvbuf=(char *)(msg.data());
-        cout<<"message received:"<< rcvbuf<<"\n";
-        //cout <<"length="<< rcvbuf.length()<<" size="<< rcvbuf.size()<<endl;
-
+        cout<<rcvbuf<<endl;
         first =total.find_last_of("<")+1;
         last = total.find_last_of(">");
 
         user=total.substr(first,(last-first));
+        cout<<user<<endl;
+        rcvbuf.resize(subzeeslag.size()+subuser.size()+user.size()+2);
+        cout<<"message received:"<< rcvbuf<<"\n";
+        cout <<"length="<< rcvbuf.length()<<" size="<< rcvbuf.size()<<endl;
         //cout<<first <<"\n"<< last<<"\n"<<user<<"\n"<<endl;
 
     //user in vector
@@ -73,7 +97,19 @@ int main()
             cout << int(players.size())-(int(players.size())-a)+1 <<"\t"<< string(players.at(a))<<"\t"<<"sizeof:"<< string(players.at(a)).size()<<"\t"<<"length:"<< string(players.at(a)).length()<<"\n";
         }
 
-        //memset(&username,'\0',username.size());
+//        talktouser.append(subzeeslag+"<"+user+">");
+//        talker.set(zmq::sockopt::subscribe,talktouser);
+//        cout<<"waiting to talk"<<endl;
+//        sleep(2);
+//        cout<<"ready"<<endl;
+
+//        string tosend;
+//        string bericht;
+//        cout<<"message:";
+//        cin >>bericht;
+//        tosend.append(talktouser+bericht);
+//        cout<<"talk to user:"<<tosend<<endl;
+//        publisher.send(zmq::buffer(tosend),zmq::send_flags::none);
     }
 
     subscriber.close();
@@ -81,17 +117,7 @@ int main()
     context.shutdown();
 
 
-//    ships Carrier(5);
-//    ships Battleship(4);
-//    ships Cruiser(3);
-//    ships Submarine(3);
-//    ships Destroyer(2);
 
-//    cout<<"lengte Carrier =\t"<< Carrier.getlenght()<<endl;
-//    cout<<"lengte Battleship =\t"<< Battleship.getlenght()<<endl;
-//    cout<<"lengte Cruiser =\t"<< Cruiser.getlenght()<<endl;
-//    cout<<"lengte Submarine =\t"<< Submarine.getlenght()<<endl;
-//    cout<<"lengte Destroyer =\t"<< Destroyer.getlenght()<<endl;
 
     return 0;
 }
