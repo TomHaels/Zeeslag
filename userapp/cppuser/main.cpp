@@ -20,9 +20,6 @@ int main()
     string rcvbuf;
     string user;
 
-    int first= 0;
-    int last = 0;
-
 //connect publisher en subscriber to benternet
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
@@ -47,18 +44,20 @@ int main()
 
         publisher.send(zmq::buffer(total),zmq::send_flags::none);
         cout<<"message send:"<<total<<total.size()<<"\t"<<total.length()<<endl;
+        total.clear();
 
         substringtot.append(substring);
         substringtot.append(username);
         substringtot.append(">");
         cout<<"ready to recv on "<<substringtot<<endl;
+        substringtot.clear();
 
-//        subscriber.set(zmq::sockopt::subscribe,substringtot);
-//        sleep(5);
+        subscriber.set(zmq::sockopt::subscribe,substringtot);
+        sleep(5);
 
-//        subscriber.recv(msg,zmq::recv_flags::none);
-//        rcvbuf=(char *)(msg.data());
-//        cout<<"rcvmessage:"<<rcvbuf<<endl;
+        subscriber.recv(msg,zmq::recv_flags::none);
+        rcvbuf=(char *)(msg.data());
+        cout<<"rcvmessage:"<<rcvbuf<<endl;
 
     }
     return 0;
