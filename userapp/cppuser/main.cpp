@@ -19,7 +19,8 @@ int main()
     string username;
     string rcvbuf;
     string user;
-
+    int choice;
+    string sendchoice;
 //connect publisher en subscriber to benternet
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
@@ -49,15 +50,22 @@ int main()
         substringtot.append(substring);
         substringtot.append(username);
         substringtot.append(">");
-        cout<<"ready to recv on "<<substringtot<<endl;
-        substringtot.clear();
 
         subscriber.set(zmq::sockopt::subscribe,substringtot);
-        sleep(5);
+        sleep(2);
 
-        subscriber.recv(msg,zmq::recv_flags::none);
-        rcvbuf=(char *)(msg.data());
-        cout<<"rcvmessage:"<<rcvbuf<<endl;
+
+            subscriber.recv(msg,zmq::recv_flags::none);
+            rcvbuf=(char *)(msg.data());
+            cout<<"rcvmessage:"<<rcvbuf<<endl;
+            cout<<"choice:";
+            cin>>choice;
+            cout<<endl;
+            rcvbuf.clear();
+            sendchoice = to_string(choice);
+            cout<<"string:"<<sendchoice<<"int:"<<(int)choice<<endl;
+            publisher.send(zmq::buffer(sendchoice),zmq::send_flags::none);
+
 
     }
     return 0;
