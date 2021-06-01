@@ -7,4 +7,5 @@ ZeroMQ will be used for message queing. The applicable programs for this applica
 The UI will send a message to the benternet broker. The service subscribes on the applicable data present on the benternet broker to collect the neccesary information from a single or multiple users.
 When the service collected the needed data from multiple users. The service will choose an enemy for each user and send a message to each user wich user is their enemy. Each user can subscribe on his opponents username. When this is happened the connection between two users can be established.The coordinates to attack the other player can be entered.
 
-![image](https://user-images.githubusercontent.com/73300420/120371389-06759c80-c316-11eb-8893-9411bba18865.png)
+![Dia1](https://user-images.githubusercontent.com/73300420/120383879-b56da480-c325-11eb-85f1-73c4703fa331.JPG)
+
