@@ -1,151 +1,195 @@
 #include <iostream>
-#include <zmq.hpp>
-#include <string.h>
-#include <unistd.h>
+#include <thread>
+#include <list>
 #include <stdlib.h>
+#include <unistd.h>
+#include <zmq.hpp>
 
 using namespace std;
-
-int main()
+zmq::context_t context(1);
+string user;
+string tegenstander;
+string men;
+int a = 0;
+void cor()
 {
-    zmq::context_t context(1);
+    zmq::message_t msg;
+    zmq::socket_t publisher(context,ZMQ_PUSH);
+    zmq::socket_t subscriber(context,ZMQ_SUB);
+    string buffer;
+    string playero = men;
+    string playert = tegenstander;
+    publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
+    subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
+    for(;;)
+    {
+        if (a == 1)
+        {
+
+        subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+playero+"><"+playert+">");
+        subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+playert+"><"+playero+">");
+        sleep(2);
+        cout<<"ready to recv coord"<<endl;
+        cout<<user<<endl;
+        cout<<tegenstander<<endl;
+            for(;;)
+            {
+                subscriber.recv(msg,zmq::recv_flags::none);
+                buffer=(char*)(msg.data());
+                cout<<"coor:"<<buffer<<endl;
+                buffer.clear();
+            }
+        }
+    }
+
+
+}
+void adduser()
+{
+    int first =0;
+    int last = 0;
+
+    string rcvbuf;
+    string subzeeslag ="<zeeslag>";
+    string subuser = "<username>";
+
+    zmq::message_t msg;
     zmq::socket_t publisher(context,ZMQ_PUSH);
     zmq::socket_t subscriber(context,ZMQ_SUB);
 
-    string pubstring ="<zeeslag><username><";
-    string substring ="<zeeslag><";
-    string total;
-    string substringtot;
-    string username="emptyval";
-    string opponent;
-    string rcvbuf;
-    string user;
-    int last;
-    int first;
-    string colum;
-    int letter;
-    string recvcor;
-
-//connect publisher en subscriber to benternet
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
-    // publisher en subscriber connected or not ?
 
-    while(1)
+    subscriber.set(zmq::sockopt::subscribe,"<zeeslag><username>");
+    sleep(2);//add a delay so there is enough time subcribing is performed
+
+    cout<<"service started.."<<endl;
+    cout<<"subscribing on <zeeslag><username>"<<endl;
+
+    for(;;)
     {
-        total ="\0";
-        username ="\0";
-        rcvbuf ="\0";
-        user ="\0";
-        zmq::message_t msg;
-        zmq::message_t rcv;
-        //msg.empty();
-
-    //without user application ask for username
-        cout << "username:";
-        cin >> username;
-        cout<<endl;
-
-        total.append(pubstring);
-        total.append(username);
-        total.append(">");
-
-        publisher.send(zmq::buffer(total),zmq::send_flags::none);//"<zeeslag><username><+"username"+>
-        cout<<"message send:"<<username<<username.size()<<"\t"<<username.length()<<endl;
-        //total.clear();
-
-        substringtot.append(substring);
-        substringtot.append(username);
-        substringtot.append(">");
-        subscriber.set(zmq::sockopt::subscribe,substringtot);//"<zeeslag><" + "username" + ">"
-        sleep(2);
-        cout<<"subscribing on"<<substringtot<<endl;
-
-
+        cout<<"searching for players"<<endl;
         subscriber.recv(msg,zmq::recv_flags::none);
         rcvbuf=(char *)(msg.data());
+        cout<<"subscriber.recv:"<<rcvbuf<<endl;
 
-        cout<<"rcvmessage:"<<rcvbuf<<endl;
-        first=rcvbuf.find_last_of(" ")+1;
-        last= rcvbuf.find_last_of(">");
-        opponent = rcvbuf.substr(first,last-first);
+    //get user out of recv string PARSING
+        first =rcvbuf.find_last_of("<")+1;
+        last = rcvbuf.find_first_of(">",first);
 
-        subscriber.set(zmq::sockopt::unsubscribe,substringtot);
-        subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+opponent+">"+"<"+username+">");
-        //cout<<"subscribed on:<zeeslag><"<<opponent<<">"<<"<"+username+">"<<endl;
-        cout<<"\nGive the target coordinates between a1 en i9"<<endl;
-        cout<<"the letters from a to i represent the colums."<<endl;
-        cout<<"the numbers represents the rows"<<endl;
-        while(1)
-        {
-        cout<<"colum:";
-        cin >> colum;
-        cout<<"\nrow:";
-        cin>>letter;
+        user=rcvbuf.substr(first,(last-first));
+        cout<<"player:";
+        cout<<user<<endl;
         cout<<endl;
+        rcvbuf.resize(subzeeslag.size()+subuser.size()+user.size()+2);
+    }
+
+}
+
+void printList()
+{
+    vector <string> players(0);
+    string subzeeslag ="<zeeslag>";
+    string subuser = "<username>";
+    string talktouser;
+    string opponent;
+    string playerone;
+    string playertwo;
+    string playname;
+    string recvcor;
+
+    zmq::message_t msg;
+    zmq::message_t rcv;
+    zmq::socket_t publisher(context,ZMQ_PUSH);
+    zmq::socket_t subscriber(context,ZMQ_SUB);
+
+    publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
+    subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
+
+    for(;;)
+    {
+        if (user.size()>0)
+        {
+        //add user in vector
+            players.push_back(user);
+            playname = user;
+            men = user;
+            cout <<"user added"<<endl;
+            for(int a =0;a<int(players.size());a++)
+            {
+                cout << int(players.size())-(int(players.size())-a)+1 <<"\t"<< string(players.at(a))<<endl;
+            }
+            user.clear();
+
+        //append <zeeslag>+<user> for communication
+                talktouser.append("<zeeslag><"+playname+">");
+
+                //subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+playname+">"); //subscribe one <zeeslag><user>
+                //cout<<"\nsubscribing on "<<"<zeeslag><"<<playname<<">"<<endl;
+                //sleep(2);
+                //cout<<"subscribing\n"<<endl;
+
+        //---------select player in vector----------------
+                if(players.size()>1)
+                {
+                    opponent= string(players.at(0)); //longest waiting player
+            //
+                    playerone.append(subzeeslag+"<"+playname+">"+"<your opponent is "+opponent+">");
+                    playertwo.append(subzeeslag+"<"+opponent+">"+"<your opponent is "+playname+">");
+                    cout<<playname<<" is playing against "<<opponent<<endl;
+                    tegenstander = opponent;
+            //Playing players out of choosing list
+
+                    cout <<"\nuser deleted"<<endl;
+                    players.erase(players.end());
+                    players.erase(players.begin());
+                    for(int a =0;a<int(players.size());a++)
+                    {
+                        cout << int(players.size())-(int(players.size())-a)+1 <<endl;//to check if vector is empty
+                    }
+                    //zmq::buffer("\0");
+                    publisher.send(zmq::buffer(playerone),zmq::send_flags::none);
+                    cout<<"publisher.send"<<playerone<<endl;
+                    publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
+                    cout<<"publisher.send"<<playertwo<<endl;
+                    playerone.clear();
+                    playertwo.clear();
 
 
-        publisher.send(zmq::buffer(substringtot+"<"+opponent+">"+colum),zmq::send_flags::none);
-        cout<<"send"<<endl;
-        subscriber.recv(msg,zmq::recv_flags::none);
-        cout<<"rcv"<<endl;
-        recvcor = (char*)(rcv.data());
-        cout<<"received:"<<recvcor<<endl;
-        recvcor.clear();
+                    //cout<<"subscribed on:"<<"<zeeslag><"<<playname<<">"<<"<"<<opponent<<">"<<endl;
+                    //sleep(2);
+                    cout<<men<<endl;
+                    cout<<tegenstander<<endl;
+                    a = 1;
+                    //recvcor.clear();
+                    //subscriber.recv(rcv,zmq::recv_flags::none);
+
+                    //recvcor = (char*)(rcv.data());
+                    //cout<<"received:"<<recvcor<<endl;
+
+
+                    }
+                }
+
+
         }
-//        rcvbuf.clear();
-//        sendchoice = to_string(choice);
-//        cout<<"string:"<<sendchoice<<"int:"<<(int)choice<<endl;
-//        publisher.send(zmq::buffer(sendchoice),zmq::send_flags::none);
+    }
 
+
+int main()
+{
+    while(1)
+    {
+
+    thread t1(adduser);
+    thread t2(printList);
+    thread t3(cor);
+
+    t1.join();
+    t2.join();
+    t3.join();
 
 
     }
     return 0;
 }
-
-        }
-
-
-            //choice = stoi(rcvchoice);
-            //cout<<choice<<endl;
-            // to be continued =
-
-
-//                switch(choice)
-//                {
-
-//                    case '1':
-//                        cout<<"choose a number\n"<<endl;
-//                        for(int a =0;a<int(players.size());a++)
-//                        {
-//                            cout << int(players.size())-(int(players.size())-a)+1 <<"\t"<< string(players.at(a))<<"\t"<<"sizeof:"<< string(players.at(a)).size()<<"\t"<<"length:"<< string(players.at(a)).length()<<"\n";
-//                        }
-//                        cout<<"choose a number"<<endl;
-//                        cin>>select;
-//                        cout<<"you chose player:"<<string(players.at(select-1))<<"\n"<<endl;
-
-//                    break;
-//                    case '2':
-//                      /* generate secret number between 1 and 10: */
-//                      random = rand() % int(players.size()) + 1;
-//                      cout<<"random chose:"<<string(players.at(random-1))<<" "<<random<<endl;
-
-//                    break;
-
-//                    case '3':
-//                    cout<<"name:";
-//                    cin>>user;
-//                    cout<<endl;
-
-//                    players.push_back(user);
-//                    cout<<"player added"<<endl;
-
-//                    break;
-//                default:
-//                    cout<<"another input"<<endl;
-
-//                }
-
-
-

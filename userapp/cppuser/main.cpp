@@ -16,15 +16,18 @@ int main()
     string substring ="<zeeslag><";
     string total;
     string substringtot;
-    string username="emptyval";
+    string username;
     string opponent;
     string rcvbuf;
     string user;
+    string coord;
     int last;
     int first;
+    string attack;
     string colum;
-    int letter;
+    string letter;
     string recvcor;
+    string sendcor;
 
 //connect publisher en subscriber to benternet
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
@@ -33,72 +36,78 @@ int main()
 
     while(1)
     {
-        total ="\0";
-        username ="\0";
-        rcvbuf ="\0";
-        user ="\0";
         zmq::message_t msg;
         zmq::message_t rcv;
-        //msg.empty();
 
-    //without user application ask for username
         cout << "username:";
         cin >> username;
         cout<<endl;
 
+    // compose a message to send "<zeeslag><username><"+ username + >
         total.append(pubstring);
         total.append(username);
         total.append(">");
 
         publisher.send(zmq::buffer(total),zmq::send_flags::none);//"<zeeslag><username><+"username"+>
-        cout<<"message send:"<<username<<username.size()<<"\t"<<username.length()<<endl;
+        cout<<"publisher.send:"<<total<<endl;
+        //cout<<"message send:"<<username<<username.size()<<"\t"<<username.length()<<endl;
         //total.clear();
 
+    // compose a message to subscribe on "<zeeslag>< + username + >"
         substringtot.append(substring);
         substringtot.append(username);
         substringtot.append(">");
-        subscriber.set(zmq::sockopt::subscribe,substringtot);//"<zeeslag><" + "username" + ">"
+
+        subscriber.set(zmq::sockopt::subscribe,substringtot);
         sleep(2);
         cout<<"subscribing on"<<substringtot<<endl;
 
-
+    //  receiving a message + output wotdt geparsed
         subscriber.recv(msg,zmq::recv_flags::none);
         rcvbuf=(char *)(msg.data());
+        cout<<"received message:"<<rcvbuf<<endl;
 
-        cout<<"rcvmessage:"<<rcvbuf<<endl;
         first=rcvbuf.find_last_of(" ")+1;
         last= rcvbuf.find_last_of(">");
         opponent = rcvbuf.substr(first,last-first);
 
         subscriber.set(zmq::sockopt::unsubscribe,substringtot);
-        subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+opponent+">"+"<"+username+">");
+
+        subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+opponent+">");//+"<"+username+">");
+            //<zeeslag><opponent><tom>
         //cout<<"subscribed on:<zeeslag><"<<opponent<<">"<<"<"+username+">"<<endl;
         cout<<"\nGive the target coordinates between a1 en i9"<<endl;
         cout<<"the letters from a to i represent the colums."<<endl;
-        cout<<"the numbers represents the rows"<<endl;
+        cout<<"the numbers from 1 to 9 represents the rows"<<endl;
+
         while(1)
         {
-        cout<<"colum:";
-        cin >> colum;
-        cout<<"\nrow:";
-        cin>>letter;
-        cout<<endl;
+            cout<<"coordinates to attack:";
+            cin >> coord;
+            while(coord.size()>2)
+            {
+                coord.clear();
+                cout<<"Missile out of range"<<endl;
+                cout<<username<<":";
+                cin >>coord;
+            }
+
+            //cout<<username<<" attacking:"<<coord<<endl;
 
 
-        publisher.send(zmq::buffer(substringtot+"<"+opponent+">"+colum),zmq::send_flags::none);
-        cout<<"send"<<endl;
-        subscriber.recv(msg,zmq::recv_flags::none);
-        cout<<"rcv"<<endl;
-        recvcor = (char*)(rcv.data());
-        cout<<"received:"<<recvcor<<endl;
-        recvcor.clear();
+            sendcor.append(substringtot+"<"+opponent+">"+"<"+coord+">");
+            publisher.send(zmq::buffer(sendcor),zmq::send_flags::none);
+            sendcor.clear();
+            cout<<"\nshooting\n"<<endl;
+            subscriber.recv(msg,zmq::recv_flags::none);
+
+            recvcor = (char*)(msg.data());
+            attack =recvcor.substr((recvcor.find_last_of("<")+1),(recvcor.find_last_of(">")-1)-(recvcor.find_last_of("<")));
+
+            cout<<opponent<<" attacked:"<<attack<<endl;
+            attack.clear();
+
         }
-//        rcvbuf.clear();
-//        sendchoice = to_string(choice);
-//        cout<<"string:"<<sendchoice<<"int:"<<(int)choice<<endl;
-//        publisher.send(zmq::buffer(sendchoice),zmq::send_flags::none);
-
-
 
     }
     return 0;
