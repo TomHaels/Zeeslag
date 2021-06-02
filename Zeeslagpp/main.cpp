@@ -19,9 +19,10 @@ void cor()
     string buffer;
     string playero;
     string playert;
-    string exit;
     string coord;
     string totalsend;
+    string exituser;
+    //string coordstatus;
     int first;
     int last;
     int exfirstuser;
@@ -46,14 +47,14 @@ void cor()
 
                 first =buffer.find_last_of("<")+1;
                 last = buffer.find_first_of(">",first);
-                exit=buffer.substr(first,(last-first)); // check for exit
+                coord=buffer.substr(first,(last-first)); // check for exit
 
                 exfirstuser= (buffer.find_first_of("<",1)+1);
                 exsecuser = buffer.find_first_of(">",exfirstuser);
-                string exituser = buffer.substr(exfirstuser,exsecuser-exfirstuser);
+                exituser = buffer.substr(exfirstuser,exsecuser-exfirstuser);
                 //cout<<exituser<<" "<<exsecuser<<" "<<exfirstuser<<endl;
 
-                if(exit=="exit"||exit =="shutdown")
+                if(coord=="exit"||coord =="shutdown")
                 {
                     cout<<exituser<<" left the game"<<endl;
                     if (exituser == playero)
@@ -79,14 +80,47 @@ void cor()
                 }
                 else
                 {
-                    cout<<"coordinates:"<<exit<<endl;
-                    //cout<<exit.at(0)<<endl;
-                    //cout<<exit.at(1)<<endl;
+                        cout<<"coordinates"<<coord<<endl;
 
-                    exit.clear();
+//                    if(coord.size()!=2)
+//                    {
+//                        cout<<"coordinates out of range"<<endl;
+//                        coordstatus.append("coordinates out of range");
+//                        if (exituser == playero)
+//                        {
+//                            publisher.send(zmq::buffer(coordstatus,coordstatus.size()),zmq::send_flags::none);
+//                        }
+//                        else if(exituser == playert)
+//                        {
+//                            publisher.send(zmq::buffer(coordstatus,coordstatus.size()),zmq::send_flags::none);
+//                        }
+//                        coordstatus.clear();
+//                    }
+//                    else if(coord.at(0)<97||coord.at(0)>105)
+//                    {
+//                        cout<<"first coordinate is out of range"<<endl;
+//                        coordstatus.append("coordinates out of range");
+//                        publisher.send(zmq::buffer(coordstatus,coordstatus.size()),zmq::send_flags::none);
+//                        coordstatus.clear();
+
+//                    }
+//                    else if(coord.at(1)<'1'||coord.at(1)>'9')
+//                    {
+//                        cout<<"second coordinate is out of range"<<endl;
+//                        coordstatus.append("coordinates out of range");
+//                        publisher.send(zmq::buffer(coordstatus,coordstatus.size()),zmq::send_flags::none);
+//                        coordstatus.clear();
+//                    }
+//                    else
+//                    {
+//                        cout<<"coordinates:"<<coord<<endl;
+//                        coordstatus.append("coordinates out of range");
+//                        publisher.send(zmq::buffer(coordstatus,coordstatus.size()),zmq::send_flags::none);
+//                        coordstatus.clear();
+//                    }
+                    coord.clear();
                 }
                 buffer.clear();
-                exit.clear();
                 exituser.clear();
                 playero.clear();
                 playert.clear();
