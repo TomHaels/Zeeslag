@@ -19,13 +19,10 @@ int main()
     string username;
     string opponent;
     string rcvbuf;
-    string user;
     string coord;
     int last;
     int first;
     string attack;
-    string colum;
-    string letter;
     string recvcor;
     string sendcor;
 
@@ -33,9 +30,11 @@ int main()
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
     // publisher en subscriber connected or not ?
-
-    while(1)
+    bool status = true;
+    bool program = true;
+    while(program)
     {
+        status = true;
         zmq::message_t msg;
         zmq::message_t rcv;
 
@@ -48,10 +47,12 @@ int main()
         total.append(username);
         total.append(">");
 
-        publisher.send(zmq::buffer(total),zmq::send_flags::none);//"<zeeslag><username><+"username"+>
+        publisher.send(zmq::buffer(total,total.size()),zmq::send_flags::none);//"<zeeslag><username><+"username"+>                                                   //send composed message
+        zmq::buffer("\0");
+
         cout<<"publisher.send:"<<total<<endl;
         //cout<<"message send:"<<username<<username.size()<<"\t"<<username.length()<<endl;
-        //total.clear();
+        total.clear();
 
     // compose a message to subscribe on "<zeeslag>< + username + >"
         substringtot.append(substring);
@@ -63,7 +64,7 @@ int main()
         cout<<"subscribing on"<<substringtot<<endl;
 
     //  receiving a message + output wotdt geparsed
-        subscriber.recv(msg,zmq::recv_flags::none);
+        subscriber.recv(msg,zmq::recv_flags::none);                                                                                                     // recv message to append
         rcvbuf=(char *)(msg.data());
         cout<<"received message:"<<rcvbuf<<endl;
 
@@ -75,16 +76,17 @@ int main()
 
         subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+opponent+">");//+"<"+username+">");
             //<zeeslag><opponent><tom>
-        //cout<<"subscribed on:<zeeslag><"<<opponent<<">"<<"<"+username+">"<<endl;
         cout<<"\nGive the target coordinates between a1 en i9"<<endl;
         cout<<"the letters from a to i represent the colums."<<endl;
-        cout<<"the numbers from 1 to 9 represents the rows"<<endl;
+        cout<<"the numbers from 1 to 9 represents the rows\n"<<endl;
+        cout<<"to start a new game typ exit"<<endl;
+        cout<<"to shutdown the program typ shutdown"<<endl;
 
-        while(1)
+        while(status)
         {
             cout<<"coordinates to attack:";
             cin >> coord;
-            while(coord.size()>2)
+            while(coord.size()>2&&coord != "exit"&&coord!= "shutdown")
             {
                 coord.clear();
                 cout<<"Missile out of range"<<endl;
@@ -92,23 +94,49 @@ int main()
                 cin >>coord;
             }
 
-            //cout<<username<<" attacking:"<<coord<<endl;
-
-
             sendcor.append(substringtot+"<"+opponent+">"+"<"+coord+">");
-            publisher.send(zmq::buffer(sendcor),zmq::send_flags::none);
+            publisher.send(zmq::buffer(sendcor,sendcor.size()),zmq::send_flags::none);                                                                             //send composed message
+
             sendcor.clear();
-            cout<<"\nshooting\n"<<endl;
-            subscriber.recv(msg,zmq::recv_flags::none);
+            if(coord == "exit")
+            {
+                cout<<"exiting the game"<<endl;
+                status = false;
+            }
+            else if(coord =="shutdown")
+            {
+                cout<<"exiting program"<<endl;
+                program = false;
+                status = false;
+            }
+            else
+            {
+                cout<<"\nshooting\n"<<endl;
+                subscriber.recv(msg,zmq::recv_flags::none);
 
-            recvcor = (char*)(msg.data());
-            attack =recvcor.substr((recvcor.find_last_of("<")+1),(recvcor.find_last_of(">")-1)-(recvcor.find_last_of("<")));
+                recvcor = (char*)(msg.data());                                                                                                      //recv message to append
+                attack =recvcor.substr((recvcor.find_last_of("<")+1),(recvcor.find_last_of(">")-1)-(recvcor.find_last_of("<")));
+                if (attack == "exit"|| attack == "shutdown")
+                {
+                    cout<<opponent<<" opponent left the game"<<endl;
 
-            cout<<opponent<<" attacked:"<<attack<<endl;
-            attack.clear();
+                }
+                else
+                {
+                cout<<opponent<<" attacked:"<<attack<<endl;
+                }
+                attack.clear();
+            }
 
         }
+    substringtot.clear();
+    subscriber.set(zmq::sockopt::unsubscribe,"<zeeslag><"+opponent+">");
 
     }
+    cout<<"Goodbye"<<endl;
+    publisher.close();
+    subscriber.close();
+    context.shutdown();
+
     return 0;
 }

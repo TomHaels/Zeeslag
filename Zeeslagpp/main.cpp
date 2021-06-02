@@ -10,38 +10,93 @@ zmq::context_t context(1);
 string user;
 string tegenstander;
 string men;
-int a = 0;
+bool status = 0;
 void cor()
 {
     zmq::message_t msg;
     zmq::socket_t publisher(context,ZMQ_PUSH);
     zmq::socket_t subscriber(context,ZMQ_SUB);
     string buffer;
-    string playero = men;
-    string playert = tegenstander;
-    publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
+    string playero;
+    string playert;
+    string exit;
+    string coord;
+    string totalsend;
+    int first;
+    int last;
+    int exfirstuser;
+    int exsecuser;
+    publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");                                                                                                       //2.connection benternet
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
     for(;;)
     {
-        if (a == 1)
+        while (status)
         {
-
+        playero= men;
+        playert = tegenstander;
         subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+playero+"><"+playert+">");
         subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+playert+"><"+playero+">");
         sleep(2);
         cout<<"ready to recv coord"<<endl;
-        cout<<user<<endl;
-        cout<<tegenstander<<endl;
-            for(;;)
+
+            while(status)
             {
-                subscriber.recv(msg,zmq::recv_flags::none);
+                subscriber.recv(msg,zmq::recv_flags::none);                                                                                                         //5+6.1st recv + parsing
                 buffer=(char*)(msg.data());
-                cout<<"coor:"<<buffer<<endl;
+
+                first =buffer.find_last_of("<")+1;
+                last = buffer.find_first_of(">",first);
+                exit=buffer.substr(first,(last-first)); // check for exit
+
+                exfirstuser= (buffer.find_first_of("<",1)+1);
+                exsecuser = buffer.find_first_of(">",exfirstuser);
+                string exituser = buffer.substr(exfirstuser,exsecuser-exfirstuser);
+                //cout<<exituser<<" "<<exsecuser<<" "<<exfirstuser<<endl;
+
+                if(exit=="exit"||exit =="shutdown")
+                {
+                    cout<<exituser<<" left the game"<<endl;
+                    if (exituser == playero)
+                    {
+                        totalsend.append("<zeeslag><"+playero+"><"+playert+">"+"<exit>");
+                        publisher.send(zmq::buffer(totalsend,totalsend.size()),zmq::send_flags::none);                                          //7+8 send a reply from a composed message
+                        //cout<<"send:<zeeslag><"<<playero<<"><"<<playert<<">"<<"<exit>"<<endl;
+                        status = false;
+                        totalsend.clear();
+                        zmq::buffer("\0");
+
+                    }
+                    else if(exituser == playert)
+                    {
+                        totalsend.append("<zeeslag><"+playert+"><"+playero+">"+"<exit>");
+                        publisher.send(zmq::buffer(totalsend,totalsend.size()),zmq::send_flags::none);// sending exit to player
+                        //cout<<"send:<zeeslag><"<<playert<<"><"<<playero<<">"<<"<exit>"<<endl;
+                        status = false;
+                        totalsend.clear();
+                        zmq::buffer("\0");
+
+                    }
+                }
+                else
+                {
+                    cout<<"coordinates:"<<exit<<endl;
+                    //cout<<exit.at(0)<<endl;
+                    //cout<<exit.at(1)<<endl;
+
+                    exit.clear();
+                }
                 buffer.clear();
+                exit.clear();
+                exituser.clear();
+                playero.clear();
+                playert.clear();
+
             }
         }
     }
-
+    publisher.close();
+    subscriber.close();
+    context.shutdown();
 
 }
 void adduser()
@@ -50,14 +105,11 @@ void adduser()
     int last = 0;
 
     string rcvbuf;
-    string subzeeslag ="<zeeslag>";
-    string subuser = "<username>";
-
     zmq::message_t msg;
-    zmq::socket_t publisher(context,ZMQ_PUSH);
+    //zmq::socket_t publisher(context,ZMQ_PUSH);
     zmq::socket_t subscriber(context,ZMQ_SUB);
 
-    publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
+   // publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
 
     subscriber.set(zmq::sockopt::subscribe,"<zeeslag><username>");
@@ -69,11 +121,10 @@ void adduser()
     for(;;)
     {
         cout<<"searching for players"<<endl;
-        subscriber.recv(msg,zmq::recv_flags::none);
+        subscriber.recv(msg,zmq::recv_flags::none);                                                                                                            //5+6.second receive + parsing
         rcvbuf=(char *)(msg.data());
         cout<<"subscriber.recv:"<<rcvbuf<<endl;
 
-    //get user out of recv string PARSING
         first =rcvbuf.find_last_of("<")+1;
         last = rcvbuf.find_first_of(">",first);
 
@@ -81,8 +132,11 @@ void adduser()
         cout<<"player:";
         cout<<user<<endl;
         cout<<endl;
-        rcvbuf.resize(subzeeslag.size()+subuser.size()+user.size()+2);
+        rcvbuf.clear();
     }
+    //publisher.close();
+    subscriber.close();
+    context.shutdown();
 
 }
 
@@ -91,12 +145,12 @@ void printList()
     vector <string> players(0);
     string subzeeslag ="<zeeslag>";
     string subuser = "<username>";
-    string talktouser;
+    //string talktouser;
     string opponent;
     string playerone;
     string playertwo;
     string playname;
-    string recvcor;
+
 
     zmq::message_t msg;
     zmq::message_t rcv;
@@ -121,14 +175,6 @@ void printList()
             }
             user.clear();
 
-        //append <zeeslag>+<user> for communication
-                talktouser.append("<zeeslag><"+playname+">");
-
-                //subscriber.set(zmq::sockopt::subscribe,"<zeeslag><"+playname+">"); //subscribe one <zeeslag><user>
-                //cout<<"\nsubscribing on "<<"<zeeslag><"<<playname<<">"<<endl;
-                //sleep(2);
-                //cout<<"subscribing\n"<<endl;
-
         //---------select player in vector----------------
                 if(players.size()>1)
                 {
@@ -138,6 +184,8 @@ void printList()
                     playertwo.append(subzeeslag+"<"+opponent+">"+"<your opponent is "+playname+">");
                     cout<<playname<<" is playing against "<<opponent<<endl;
                     tegenstander = opponent;
+                    opponent.clear();
+                    playname.clear();
             //Playing players out of choosing list
 
                     cout <<"\nuser deleted"<<endl;
@@ -148,32 +196,23 @@ void printList()
                         cout << int(players.size())-(int(players.size())-a)+1 <<endl;//to check if vector is empty
                     }
                     //zmq::buffer("\0");
-                    publisher.send(zmq::buffer(playerone),zmq::send_flags::none);
+                    publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
                     cout<<"publisher.send"<<playerone<<endl;
                     publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
                     cout<<"publisher.send"<<playertwo<<endl;
                     playerone.clear();
                     playertwo.clear();
+                    zmq::buffer("\0");
 
-
-                    //cout<<"subscribed on:"<<"<zeeslag><"<<playname<<">"<<"<"<<opponent<<">"<<endl;
-                    //sleep(2);
-                    cout<<men<<endl;
-                    cout<<tegenstander<<endl;
-                    a = 1;
-                    //recvcor.clear();
-                    //subscriber.recv(rcv,zmq::recv_flags::none);
-
-                    //recvcor = (char*)(rcv.data());
-                    //cout<<"received:"<<recvcor<<endl;
-
+                    status = 1;
 
                     }
                 }
-
-
         }
-    }
+    publisher.close();
+    subscriber.close();
+    context.shutdown();
+}
 
 
 int main()
