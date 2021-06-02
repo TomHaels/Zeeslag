@@ -9,5 +9,6 @@ When the service collected the needed data from at least two users. The service 
 
 ## Working
 The diagram below helps to understand the total communication between the service and the user. Every step where been go trough is numbered. 
-![Dia1](https://user-images.githubusercontent.com/73300420/120383879-b56da480-c325-11eb-85f1-73c4703fa331.JPG)
+![Dia1](https://user-images.githubusercontent.com/73300420/120564856-1ec7e300-c40c-11eb-9036-b50558a8aa8f.JPG)
+
 
