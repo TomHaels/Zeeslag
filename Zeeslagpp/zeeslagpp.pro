@@ -11,9 +11,7 @@ INCLUDEPATH += $$PWD/../include
 
 
 SOURCES += \
-        main.cpp \
-        ships.cpp
+        main.cpp
 
 HEADERS += \
-    ships.h \
 
