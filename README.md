@@ -3,7 +3,7 @@ The concept of this algorithm is to establish a connection between two users whe
 This algorithm will use 2 programs one is called the service and the other is called the user. These two will be in connection through message queing with a broker called benternet.
 ZeroMQ will be used for message queing. The applicable programs for this application can be accessed through the zeeslagpp map .
 
-Service can be accessed through the zeeslagpp map
+Service can be accessed through the zeeslagpp map\n
 User can be accessed throuhg the userpp map
 
 ## Working principle
