@@ -20,6 +20,7 @@ int main()
     string opponent;
     string rcvbuf;
     string coord;
+    string opscore;
     int last;
     int first;
     int score;
@@ -35,15 +36,20 @@ int main()
     // publisher en subscriber connected or not ?
     bool status = true;
     bool program = true;
+    cout << "username:";
+    cin >> username;
+    cout<<endl;
+    cout<<"score:";
+    cin>>score;
+    cout<<endl;
     while(program)
     {
+
         status = true;
         zmq::message_t msg;
         zmq::message_t rcv;
 
-        cout << "username:";
-        cin >> username;
-        cout<<endl;
+
         cout <<username<<" your startsscore ="<<score<<endl;
 
     // compose a message to send "<zeeslag><username><"+ username + >
@@ -81,6 +87,21 @@ int main()
         first=rcvbuf.find_last_of(" ")+1;
         last= rcvbuf.find_first_of(">",first);
         opponent = rcvbuf.substr(first,last-first);
+
+        int firstscore = rcvbuf.find_last_of("<")+1;
+        int lastscore = rcvbuf.find_first_of(">",firstscore);
+        opscore=rcvbuf.substr(firstscore,(lastscore-firstscore));
+        cout<<opscore<<endl;
+        int scored = stoi(opscore);
+        if(scored<=score)
+        {
+            cout<<username<<" u may begin"<<endl;
+        }
+        else
+        {
+            cout<<username<<"u may not begin"<<endl;
+        }
+
 
         subscriber.set(zmq::sockopt::unsubscribe,substringtot);
 

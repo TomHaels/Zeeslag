@@ -248,19 +248,19 @@ void printList()
                     //zmq::buffer("\0");
                     if(score.at(0)>=score.at(1))
                     {
-//                        cout<<string(players.at(1))<<" has lowest score he begins";
-//                        publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
-//                        cout<<"publisher.send"<<playerone<<endl;
-//                        publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
-//                        cout<<"publisher.send"<<playertwo<<endl;
+                        cout<<string(players.at(1))<<" has lowest score he begins";
+                        publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
+                        cout<<"publisher.send"<<playerone<<endl;
+                        publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
+                        cout<<"publisher.send"<<playertwo<<endl;
                     }
                     else
                     {
-//                        cout<<string(players.at(0))<<" has lowest score";
-//                        publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
-//                        cout<<"publisher.send"<<playertwo<<endl;
-//                        publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
-//                        cout<<"publisher.send"<<playerone<<endl;
+                        cout<<string(players.at(0))<<" has lowest score";
+                        publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
+                        cout<<"publisher.send"<<playertwo<<endl;
+                        publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
+                        cout<<"publisher.send"<<playerone<<endl;
 
                     }
 
