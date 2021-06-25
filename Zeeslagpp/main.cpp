@@ -8,9 +8,12 @@
 using namespace std;
 zmq::context_t context(1);
 string user;
+string finalscore;
 string tegenstander;
 string men;
+string menscore;
 bool status = 0;
+//
 void cor()
 {
     zmq::message_t msg;
@@ -27,6 +30,7 @@ void cor()
     int last;
     int exfirstuser;
     int exsecuser;
+    int firstscore;
     publisher.connect("tcp://benternet.pxl-ea-ict.be:24041");                                                                                                       //2.connection benternet
     subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042");
     for(;;)
@@ -59,6 +63,7 @@ void cor()
                     cout<<exituser<<" left the game"<<endl;
                     if (exituser == playero)
                     {
+                        cout<<"test eval"<<endl;
                         totalsend.append("<zeeslag><"+playero+"><"+playert+">"+"<exit>");
                         publisher.send(zmq::buffer(totalsend,totalsend.size()),zmq::send_flags::none);                                          //7+8 send a reply from a composed message
                         //cout<<"send:<zeeslag><"<<playero<<"><"<<playert<<">"<<"<exit>"<<endl;
@@ -69,6 +74,7 @@ void cor()
                     }
                     else if(exituser == playert)
                     {
+                        cout<<"test eval"<<endl;
                         totalsend.append("<zeeslag><"+playert+"><"+playero+">"+"<exit>");
                         publisher.send(zmq::buffer(totalsend,totalsend.size()),zmq::send_flags::none);// sending exit to player
                         //cout<<"send:<zeeslag><"<<playert<<"><"<<playero<<">"<<"<exit>"<<endl;
@@ -158,13 +164,20 @@ void adduser()
         subscriber.recv(msg,zmq::recv_flags::none);                                                                                                            //5+6.second receive + parsing
         rcvbuf=(char *)(msg.data());
         cout<<"subscriber.recv:"<<rcvbuf<<endl;
+        //recv "<zeeslag><username><+"username"+>
 
-        first =rcvbuf.find_last_of("<")+1;
+        //first =rcvbuf.find_last_of("<")+1;
+        first = rcvbuf.find_first_of("<",19)+1;
         last = rcvbuf.find_first_of(">",first);
 
+        int firstscore = rcvbuf.find_last_of("<")+1;
+        int lastscore = rcvbuf.find_first_of(">",firstscore);
+
+        //score
+        finalscore= rcvbuf.substr(firstscore,(lastscore-firstscore));
         user=rcvbuf.substr(first,(last-first));
         cout<<"player:";
-        cout<<user<<endl;
+        cout<<user<<" score:"<<finalscore<<endl;
         cout<<endl;
         rcvbuf.clear();
     }
@@ -177,13 +190,16 @@ void adduser()
 void printList()
 {
     vector <string> players(0);
+    vector <string> score(0);
     string subzeeslag ="<zeeslag>";
     string subuser = "<username>";
     //string talktouser;
     string opponent;
+    string opponentscore;
     string playerone;
     string playertwo;
     string playname;
+    string playscore;
 
 
     zmq::message_t msg;
@@ -200,40 +216,67 @@ void printList()
         {
         //add user in vector
             players.push_back(user);
+            score.push_back(finalscore);
             playname = user;
+            playscore = finalscore;
             men = user;
+            menscore=finalscore;
             cout <<"user added"<<endl;
             for(int a =0;a<int(players.size());a++)
             {
-                cout << int(players.size())-(int(players.size())-a)+1 <<"\t"<< string(players.at(a))<<endl;
+                cout << int(players.size())-(int(players.size())-a)+1 <<"\t"<< string(players.at(a))<<"\t"<<"score:"<<string(score.at(a))<<endl;
             }
             user.clear();
+            finalscore.clear();
 
         //---------select player in vector----------------
                 if(players.size()>1)
                 {
                     opponent= string(players.at(0)); //longest waiting player
-            //
-                    playerone.append(subzeeslag+"<"+playname+">"+"<your opponent is "+opponent+">");
-                    playertwo.append(subzeeslag+"<"+opponent+">"+"<your opponent is "+playname+">");
+                    opponentscore=string(score.at(0));
+
+                    //playname = string(players.at(1));//first waiting player.
+
+                    playerone.append(subzeeslag+"<"+playname+">"+"<your opponent is "+opponent+"><"+opponentscore+">");
+                    playertwo.append(subzeeslag+"<"+opponent+">"+"<your opponent is "+playname+"><"+playscore+">");
                     cout<<playname<<" is playing against "<<opponent<<endl;
                     tegenstander = opponent;
-                    opponent.clear();
-                    playname.clear();
+
             //Playing players out of choosing list
+
+
+                    //zmq::buffer("\0");
+                    if(score.at(0)>=score.at(1))
+                    {
+                        cout<<string(players.at(1))<<" has lowest score he begins";
+                        publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
+                        cout<<"publisher.send"<<playerone<<endl;
+                        publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
+                        cout<<"publisher.send"<<playertwo<<endl;
+                    }
+                    else
+                    {
+                        cout<<string(players.at(0))<<" has lowest score";
+                        publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
+                        cout<<"publisher.send"<<playertwo<<endl;
+                        publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
+                        cout<<"publisher.send"<<playerone<<endl;
+
+                    }
 
                     cout <<"\nuser deleted"<<endl;
                     players.erase(players.end());
                     players.erase(players.begin());
+                    score.erase(score.end());
+                    score.erase(score.begin());
                     for(int a =0;a<int(players.size());a++)
                     {
                         cout << int(players.size())-(int(players.size())-a)+1 <<endl;//to check if vector is empty
                     }
-                    //zmq::buffer("\0");
-                    publisher.send(zmq::buffer(playerone),zmq::send_flags::none);                                                                                       //7+8 send a reply from a composed message
-                    cout<<"publisher.send"<<playerone<<endl;
-                    publisher.send(zmq::buffer(playertwo),zmq::send_flags::none);
-                    cout<<"publisher.send"<<playertwo<<endl;
+                    opponent.clear();
+                    playname.clear();
+                    opponentscore.clear();
+                    playscore.clear();
                     playerone.clear();
                     playertwo.clear();
                     zmq::buffer("\0");

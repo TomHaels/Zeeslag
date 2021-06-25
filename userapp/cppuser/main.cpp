@@ -22,6 +22,8 @@ int main()
     string coord;
     int last;
     int first;
+    int score;
+    string hits;
     string attack;
     string recvcor;
     string sendcor;
@@ -41,10 +43,17 @@ int main()
         cout << "username:";
         cin >> username;
         cout<<endl;
+        cout <<username<<" your startsscore =";
+        cin >> score;
+        cout<<endl;
 
     // compose a message to send "<zeeslag><username><"+ username + >
+        hits = to_string(score);
         total.append(pubstring);
         total.append(username);
+        total.append(">");
+        total.append("<");
+        total.append(hits);
         total.append(">");
 
         publisher.send(zmq::buffer(total,total.size()),zmq::send_flags::none);//"<zeeslag><username><+"username"+>                                                   //send composed message
@@ -101,6 +110,8 @@ int main()
             if(coord == "exit")
             {
                 cout<<"exiting the game"<<endl;
+                cout<<"what is your score:";
+                cin>>score;
                 status = false;
             }
             else if(coord =="shutdown")
