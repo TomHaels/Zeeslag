@@ -23,6 +23,7 @@ int main()
     int last;
     int first;
     int score;
+    int newscore;
     string hits;
     string attack;
     string recvcor;
@@ -43,9 +44,7 @@ int main()
         cout << "username:";
         cin >> username;
         cout<<endl;
-        cout <<username<<" your startsscore =";
-        cin >> score;
-        cout<<endl;
+        cout <<username<<" your startsscore ="<<score<<endl;
 
     // compose a message to send "<zeeslag><username><"+ username + >
         hits = to_string(score);
@@ -75,10 +74,12 @@ int main()
     //  receiving a message + output wotdt geparsed
         subscriber.recv(msg,zmq::recv_flags::none);                                                                                                     // recv message to append
         rcvbuf=(char *)(msg.data());
-        cout<<"received message:"<<rcvbuf<<endl;
+        cout<<"received message:"<<rcvbuf<<endl; //received message:<zeeslag><tom><your opponent is bart><0>
+
+        //first =rcvbuf.find_last_of("<")+1;
 
         first=rcvbuf.find_last_of(" ")+1;
-        last= rcvbuf.find_last_of(">");
+        last= rcvbuf.find_first_of(">",first);
         opponent = rcvbuf.substr(first,last-first);
 
         subscriber.set(zmq::sockopt::unsubscribe,substringtot);
@@ -111,7 +112,8 @@ int main()
             {
                 cout<<"exiting the game"<<endl;
                 cout<<"what is your score:";
-                cin>>score;
+                cin>>newscore;
+                score = score+newscore;
                 status = false;
             }
             else if(coord =="shutdown")
